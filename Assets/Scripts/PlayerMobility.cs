@@ -12,18 +12,25 @@ public class PlayerMobility : MonoBehaviour {
 
 		// Rotate towards mouse position
 		Vector3 position = GetTouchPosition ();
-		Quaternion rotation = Quaternion.LookRotation (transform.position - position,
-		                                               Vector3.forward);
 
-		transform.rotation = rotation; // set rotation of ship, rotation required to look at mouse
-		transform.eulerAngles = new Vector3 (0, 0, transform.eulerAngles.z); // strip x and y rot
-		rigidbody2d.angularVelocity = 0; // prevent sliding
-	
-		// Move towards mouse if its far away enough
-		var xdiff = Mathf.Abs (position.x - rigidbody2d.position.x);
-		var ydiff = Mathf.Abs (position.y - rigidbody2d.position.y);
-		if (xdiff > 1 || ydiff > 1) {
-			rigidbody2d.AddForce (gameObject.transform.up * speed); // y
+		bool button = ButtonTouched (position);
+
+		if (button) {
+			FireBullet ();
+		} else {
+			Quaternion rotation = Quaternion.LookRotation (transform.position - position,
+			                                               Vector3.forward);
+			
+			transform.rotation = rotation; // set rotation of ship, rotation required to look at mouse
+			transform.eulerAngles = new Vector3 (0, 0, transform.eulerAngles.z); // strip x and y rot
+			rigidbody2d.angularVelocity = 0; // prevent sliding
+			
+			// Move towards mouse if its far away enough
+			var xdiff = Mathf.Abs (position.x - rigidbody2d.position.x);
+			var ydiff = Mathf.Abs (position.y - rigidbody2d.position.y);
+			if (xdiff > 1 || ydiff > 1) {
+				rigidbody2d.AddForce (gameObject.transform.up * speed); // y
+			}
 		}
 
 		// Fire bullet on spacebar
@@ -56,5 +63,15 @@ public class PlayerMobility : MonoBehaviour {
 		}
 
 		return Camera.main.ScreenToWorldPoint (position);
+	}
+
+	bool ButtonTouched (Vector3 pos) {
+		Collider2D hit = Physics2D.OverlapPoint(pos);
+		if (Application.platform == RuntimePlatform.Android &&
+			Input.GetTouch (0).phase == TouchPhase.Began) {
+			return hit && hit.gameObject && hit.gameObject.name == "crosshair";
+		} else {
+			return false;
+		}
 	}
 }
