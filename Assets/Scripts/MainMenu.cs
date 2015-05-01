@@ -8,5 +8,5 @@ public class MainMenu : MonoBehaviour {
 		                      Screen.width * 0.5f, Screen.height * 0.1f), "Play Game")) {
 			Application.LoadLevel ("game");
 		}
-	}
+	}	
 }

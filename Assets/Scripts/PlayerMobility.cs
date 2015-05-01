@@ -7,10 +7,12 @@ public class PlayerMobility : MonoBehaviour {
 	public float speed;
 	public float bulletSpeed;
 	public GameObject bulletPrefab;
-	public Joystick joystick;
+	public GameObject joystick;
 	public Vector3 startPos;
-	
+
 	void Start () {
+		DontDestroyOnLoad (this);
+		joystick = GameObject.Find ("MobileJoystick");
 		startPos = joystick.transform.position;
 	}
 
@@ -20,7 +22,7 @@ public class PlayerMobility : MonoBehaviour {
 		diff.Normalize();
 		float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
 
-		if (Mathf.Abs (diff.x) > 0.1 || Mathf.Abs (diff.y) > 0.1) {
+		if ((Mathf.Abs (diff.x) > 0.1 || Mathf.Abs (diff.y) > 0.1) && GetComponent<NetworkView>().isMine) {
 			transform.rotation = Quaternion.Euler(0f, 0f, rot_z - 90);
 			GetComponent<Rigidbody2D>().AddForce(gameObject.transform.up * speed);
 		}
