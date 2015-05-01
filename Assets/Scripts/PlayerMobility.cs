@@ -1,77 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityStandardAssets.CrossPlatformInput;
 
 public class PlayerMobility : MonoBehaviour {
 
 	public float speed;
 	public float bulletSpeed;
 	public GameObject bulletPrefab;
+	public Joystick joystick;
+	public Vector3 startPos;
+	
+	void Start () {
+		startPos = joystick.transform.position;
+	}
 
+	// Rotate player in sync with joystick and move in that direction
 	void FixedUpdate () {
-		var rigidbody2d = GetComponent<Rigidbody2D> ();
+		Vector3 diff = joystick.transform.position - startPos;
+		diff.Normalize();
+		float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
 
-		// Rotate towards mouse position
-		Vector3 position = GetTouchPosition ();
-
-		bool button = ButtonTouched (position);
-
-		if (button) {
-			FireBullet ();
-		} else {
-			Quaternion rotation = Quaternion.LookRotation (transform.position - position,
-			                                               Vector3.forward);
-			
-			transform.rotation = rotation; // set rotation of ship, rotation required to look at mouse
-			transform.eulerAngles = new Vector3 (0, 0, transform.eulerAngles.z); // strip x and y rot
-			rigidbody2d.angularVelocity = 0; // prevent sliding
-			
-			// Move towards mouse if its far away enough
-			var xdiff = Mathf.Abs (position.x - rigidbody2d.position.x);
-			var ydiff = Mathf.Abs (position.y - rigidbody2d.position.y);
-			if (xdiff > 1 || ydiff > 1) {
-				rigidbody2d.AddForce (gameObject.transform.up * speed); // y
-			}
-		}
-
-		// Fire bullet on spacebar
-		if (Input.GetKeyDown ("space")) {
-			FireBullet ();
+		if (Mathf.Abs (diff.x) > 0.1 || Mathf.Abs (diff.y) > 0.1) {
+			transform.rotation = Quaternion.Euler(0f, 0f, rot_z - 90);
+			GetComponent<Rigidbody2D>().AddForce(gameObject.transform.up * speed);
 		}
 	}
 
+	// Fire bullet in direction of player
 	public void FireBullet () {
-		//Clone of the bullet
-		GameObject Clone;
-		
-		//spawning the bullet at position
-		Clone = (Instantiate(bulletPrefab, transform.position,transform.rotation)) as GameObject;
+		GameObject Clone = (Instantiate(
+			bulletPrefab, transform.position,transform.rotation)) as GameObject;
 
-		//add force to the spawned objected
 		Clone.GetComponent<Rigidbody2D> ().AddForce (transform.up * bulletSpeed);
-	}
-
-	Vector3 GetTouchPosition () {
-
-		Vector3 position;
-
-		if (Application.platform == RuntimePlatform.Android) {
-			position = Input.GetTouch (0).position;
-		} else if (Application.platform == RuntimePlatform.OSXEditor) {
-			position = Input.mousePosition;
-		} else {
-			position = new Vector3 (0, 0, 0);
-		}
-
-		return Camera.main.ScreenToWorldPoint (position);
-	}
-
-	bool ButtonTouched (Vector3 pos) {
-		Collider2D hit = Physics2D.OverlapPoint(pos);
-		if (Application.platform == RuntimePlatform.Android &&
-			Input.GetTouch (0).phase == TouchPhase.Began) {
-			return hit && hit.gameObject && hit.gameObject.name == "crosshair";
-		} else {
-			return false;
-		}
 	}
 }
