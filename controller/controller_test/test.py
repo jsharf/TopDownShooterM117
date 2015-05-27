@@ -25,6 +25,8 @@ while (1):
                     if (counter == 3):
                         state["y"] = num
                     if (counter == 2):
+                        #invert 5th bit since pullup logic inverts it
+                        num ^= 16
                         state["buttons"] = "{0:b}".format(num)
                     counter -= 1
     try:
