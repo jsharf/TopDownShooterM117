@@ -8,6 +8,16 @@ char lastADCX, lastADCY, buttons;
 
 #define BOARD0
 
+#ifdef BOARD0
+#define BOARDCONVERT(bool) (bool)
+#endif
+
+#ifdef BOARD1
+#define BOARDCONVERT(bool) (!bool)
+#endif
+
+int px, py, pb;
+
 void setup()
 {
   delay(100);
@@ -18,22 +28,32 @@ void setup()
   pinMode(P2_1,INPUT);
   pinMode(P2_2,INPUT);
   pinMode(P2_3,INPUT);
+  pinMode(P1_5,INPUT_PULLUP);
+  pinMode(P1_3,INPUT);
+  pinMode(P1_4,INPUT);
+  px = P1_4;
+  py = P1_3;
+  pb = P1_5;
   #endif
   #ifdef BOARD1
   pinMode(P2_0,INPUT_PULLUP);
   pinMode(P2_1,INPUT_PULLUP);
   pinMode(P2_2,INPUT_PULLUP);
   pinMode(P2_3,INPUT_PULLUP);
-  #endif
-  pinMode(P1_5,INPUT_PULLUP);
+  pinMode(P1_4,INPUT_PULLUP);
   pinMode(P1_3,INPUT);
-  pinMode(P1_4,INPUT);
+  pinMode(P1_5,INPUT);
+  px = P1_5;
+  py = P1_3;
+  pb = P1_4;
+  #endif
+
   delay(100);
 }
 
 char Button0()
 {
-   if (digitalRead(P2_0))
+   if (BOARDCONVERT(digitalRead(P2_0)))
    {
       return BUTTON0; 
    }
@@ -42,7 +62,7 @@ char Button0()
 
 char Button1()
 {
-   if (digitalRead(P2_1))
+   if (BOARDCONVERT(digitalRead(P2_1)))
    {
       return BUTTON1; 
    }
@@ -51,7 +71,7 @@ char Button1()
 
 char Button2()
 {
-   if (digitalRead(P2_2))
+   if (BOARDCONVERT(digitalRead(P2_2)))
    {
       return BUTTON2; 
    }
@@ -60,7 +80,7 @@ char Button2()
 
 char Button3()
 {
-   if (digitalRead(P2_3))
+   if (BOARDCONVERT(digitalRead(P2_3)))
    {
       return BUTTON3; 
    }
@@ -69,7 +89,7 @@ char Button3()
 
 char Button4()
 {
-   if (digitalRead(P1_5))
+   if (!digitalRead(pb))
    {
       return BUTTON4; 
    }
@@ -128,8 +148,8 @@ void poll()
 {
   // poll ADC
   int xValue, yValue;
-  xValue = analogRead(P1_4) - 512;
-  yValue = analogRead(P1_3) - 512;
+  xValue = analogRead(px) - 512;
+  yValue = analogRead(py) - 512;
   
   xValue >>= 2;
   yValue >>= 2;
@@ -140,7 +160,7 @@ void poll()
   // poll buttons
   buttons = Button0() | Button1() | Button2() | Button3() | Button4();
   
-  struct packet   p;
+  struct packet p;
   initPacket(&p);
   sendPacket(&p);
 }
