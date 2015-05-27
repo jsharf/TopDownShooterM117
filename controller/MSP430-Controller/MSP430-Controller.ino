@@ -1,4 +1,4 @@
-char lastADCX, lastADCY;
+char lastADCX, lastADCY, buttons;
 
 #define BUTTON0 0b00001
 #define BUTTON1 0b00010
@@ -6,22 +6,74 @@ char lastADCX, lastADCY;
 #define BUTTON3 0b01000
 #define BUTTON4 0b10000
 
+#define BOARD0
+
 void setup()
 {
   delay(100);
   // put your setup code here, to run once:
   Serial.begin(9600);
+  #ifdef BOARD0
   pinMode(P2_0,INPUT);
   pinMode(P2_1,INPUT);
   pinMode(P2_2,INPUT);
   pinMode(P2_3,INPUT);
+  #endif
+  #ifdef BOARD1
+  pinMode(P2_0,INPUT_PULLUP);
+  pinMode(P2_1,INPUT_PULLUP);
+  pinMode(P2_2,INPUT_PULLUP);
+  pinMode(P2_3,INPUT_PULLUP);
+  #endif
   pinMode(P1_5,INPUT_PULLUP);
-  attachInterrupt(P2_0, Button0, RISING);
-  attachInterrupt(P2_1, Button1, RISING);
-  attachInterrupt(P2_2, Button2, RISING);
-  attachInterrupt(P2_3, Button3, RISING);
-  attachInterrupt(P1_5, Button4, FALLING);
+  pinMode(P1_3,INPUT);
+  pinMode(P1_4,INPUT);
   delay(100);
+}
+
+char Button0()
+{
+   if (digitalRead(P2_0))
+   {
+      return BUTTON0; 
+   }
+   else return 0;
+}
+
+char Button1()
+{
+   if (digitalRead(P2_1))
+   {
+      return BUTTON1; 
+   }
+   else return 0;
+}
+
+char Button2()
+{
+   if (digitalRead(P2_2))
+   {
+      return BUTTON2; 
+   }
+   else return 0;
+}
+
+char Button3()
+{
+   if (digitalRead(P2_3))
+   {
+      return BUTTON3; 
+   }
+   else return 0;
+}
+
+char Button4()
+{
+   if (digitalRead(P1_5))
+   {
+      return BUTTON4; 
+   }
+   else return 0;
 }
 
 struct packet
@@ -56,61 +108,25 @@ void calcParity(struct packet *p)
 void sendPacket(struct packet *p)
 {
   calcParity(p);
+  Serial.write("\n");
+  Serial.write((char)4);
   Serial.write(p->x);
   Serial.write(p->y);
   Serial.write(p->buttons);
   Serial.write(p->parity);
-    Serial.write("\n");
+  buttons = 0;
 }
 
 void initPacket(struct packet *p)
 {
    p->x = lastADCX;
    p->y = lastADCY;
+   p->buttons = buttons;
 }
 
-void Button0()
+void poll()
 {
-    struct packet p;
-    initPacket(&p);
-    p.buttons = BUTTON0;
-    sendPacket(&p);
-}
-
-void Button1()
-{
-    struct packet p;
-    initPacket(&p);
-    p.buttons = BUTTON1;
-    sendPacket(&p);
-}
-
-void Button2()
-{
-    struct packet p;
-    initPacket(&p);
-    p.buttons = BUTTON2;
-    sendPacket(&p);
-}
-
-void Button3()
-{
-    struct packet p;
-    initPacket(&p);
-    p.buttons = BUTTON3;
-    sendPacket(&p);
-}
-
-void Button4()
-{
-    struct packet p;
-    initPacket(&p);
-    p.buttons = BUTTON4;
-    sendPacket(&p);
-}
-
-void ADC()
-{
+  // poll ADC
   int xValue, yValue;
   xValue = analogRead(P1_4) - 512;
   yValue = analogRead(P1_3) - 512;
@@ -121,14 +137,17 @@ void ADC()
   lastADCX = (char) xValue;
   lastADCY = (char) yValue;
   
-  struct packet p;
+  // poll buttons
+  buttons = Button0() | Button1() | Button2() | Button3() | Button4();
+  
+  struct packet   p;
   initPacket(&p);
   sendPacket(&p);
 }
 
 void loop()
 {
-  //ADC();
+  poll();
 }
 
 
