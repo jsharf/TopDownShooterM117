@@ -129,11 +129,8 @@ void sendPacket(struct packet *p)
 {
   calcParity(p);
   Serial.write("\n");
-  Serial.write((char)4);
-  Serial.write(p->x);
-  Serial.write(p->y);
-  Serial.write(p->buttons);
-  Serial.write(p->parity);
+  Serial.write((char)sizeof(p));
+  Serial.write(p, sizeof(p));
   buttons = 0;
 }
 
